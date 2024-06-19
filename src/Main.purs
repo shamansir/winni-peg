@@ -9,6 +9,9 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.VDom.Driver (runUI)
 
+import Grammar.AST (AST)
+
+
 main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
