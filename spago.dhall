@@ -11,7 +11,21 @@ When creating a new Spago project, you can use
 to generate this file without the comments in this block.
 -}
 { name = "winni-peg"
-, dependencies = [ "console", "effect", "grammar", "halogen", "prelude" ]
+, dependencies =
+  [ "aff"
+  , "console"
+  , "datetime"
+  , "effect"
+  , "either"
+  , "grammar"
+  , "halogen"
+  , "halogen-subscriptions"
+  , "maybe"
+  , "parsing"
+  , "prelude"
+  , "strings"
+  , "tailrec"
+  ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]
 }
