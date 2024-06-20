@@ -2,8 +2,12 @@ module Main where
 
 import Prelude
 
-import Effect (Effect)
 import Data.Time.Duration (Milliseconds(..))
+import Data.Maybe (Maybe(..), maybe, fromMaybe)
+import Data.Either (Either(..), either)
+import Data.String (joinWith) as String
+
+import Effect (Effect)
 import Effect.Aff (forkAff, delay) as Aff
 import Effect.Aff.Class (class MonadAff)
 
@@ -19,15 +23,13 @@ import Halogen.VDom.Driver (runUI)
 
 import Web.UIEvent.InputEvent as IE
 
-import Data.Maybe (Maybe(..), maybe, fromMaybe)
-import Data.Either (Either(..))
-
 import Grammar (Grammar)
 import Grammar.Parser (parser) as Grammar
 import Grammar.AST (AST)
 import Grammar.AST.Parser (parse) as AST
 
 import Parsing (runParser, ParseError) as P
+import Parsing.String (parseErrorHuman) as P
 
 
 refreshInterval = Milliseconds 1000.0
@@ -71,8 +73,9 @@ data Action
   | Skip
   | UpdateInput InputText
   | UpdateGrammarInput GrammarInputText
-  -- | UpdateGrammar Grammar
-  -- | UpdateAST (AST String)
+  | UpdateGrammar Grammar
+  | GrammarErrorOccured P.ParseError
+  | UpdateAST (AST String)
   | Tick
 
 
@@ -94,9 +97,18 @@ component =
       -- , HH.div_ [ HH.text $ show state ]
       -- , HH.button [ HE.onClick \_ -> Increment ] [ HH.text "+" ]
       [ HH.text "Input"
-      , HH.textarea [ HP.cols 80, HP.rows 60, HE.onValueInput UpdateInput ] -- \evt -> IE.fromEvent evt <#> IE.data_ # fromMaybe "<>" # ChangeInput ]
+      , HH.text $ if state.inputChanged then "*" else "v"
+      , HH.textarea [ HP.cols 80, HP.rows 60, HE.onValueInput UpdateInput ]
       , HH.text "Grammar"
-      , HH.textarea [ HP.cols 80, HP.rows 60, HE.onValueInput UpdateGrammarInput ] -- \evt -> IE.fromEvent evt <#> IE.data_ # fromMaybe "<>" # ChangeInput ]
+      , HH.text $ if state.grammarInputChanged then "*" else "v"
+      , HH.textarea [ HP.cols 80, HP.rows 60, HE.onValueInput UpdateGrammarInput ]
+      , HH.text $ case state.grammar of
+        Nothing -> "No grammar"
+        Just (Right grammar) -> "Grammar exists"
+        Just (Left parseError) -> show parseError -- String.joinWith "\n" $ P.parseErrorHuman state.input parseError 4
+      , HH.text $ case state.ast of
+        Nothing -> "No AST"
+        Just ast -> "AST exists"
       ]
 
   handleAction = case _ of
@@ -106,18 +118,19 @@ component =
     Skip -> pure unit
     UpdateInput to -> H.modify_ \s -> s { input = to, inputChanged = true }
     UpdateGrammarInput to -> H.modify_ $ \s -> s { grammarInput = to, grammarInputChanged = true }
-    -- UpdateGrammar grammar -> H.modify_ \s -> s { grammar = Just $ Right grammar }
-    -- UpdateAST ast -> H.modify_ \s -> s { ast = Just ast }
+    UpdateAST ast -> H.modify_ \s -> s { ast = Just ast, inputChanged = false }
+    UpdateGrammar grammar -> H.modify_ \s -> s { grammar = Just $ Right grammar, grammarInputChanged = false }
+    GrammarErrorOccured error -> H.modify_ \s -> s { grammar = Just $ Left error }
     Tick -> do
       state <- H.get
       if state.grammarInputChanged
         then
           let grammarResult = P.runParser state.grammarInput Grammar.parser
-          in H.modify_ \s -> s { grammarInputChanged = false, grammar = Just grammarResult }
+          in handleAction $ either GrammarErrorOccured UpdateGrammar grammarResult
         else pure unit
       if state.inputChanged
         then do
-          state' <- H.get -- to get new one if grammar was changed
+          state' <- H.get -- get new state in case if grammar was changed before (split in two actions?)
           case state'.grammar of
             Just (Right grammar) -> do
               let ast = AST.parse grammar (const "") state'.input
