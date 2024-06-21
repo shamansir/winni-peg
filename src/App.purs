@@ -108,6 +108,8 @@ component =
       , HH.text "Grammar"
       , HH.text $ if state.grammarInputChanged then "*" else "v"
       , HH.textarea [ HP.cols 80, HP.rows 60, HE.onValueInput UpdateGrammarInput ]
+      -- , HH.text state.grammarInput
+      -- , HH.text $ show state.grammar
       , case state.grammar of
         Nothing -> HH.text "No grammar"
         Just (Right grammar) -> HH.slot_ _grammar 0 GrammarCmp.component grammar

@@ -25,6 +25,8 @@ to generate this file without the comments in this block.
   , "prelude"
   , "strings"
   , "tailrec"
+  , "web-html"
+  , "yoga-tree"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]
