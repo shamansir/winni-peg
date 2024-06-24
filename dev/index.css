@@ -1,0 +1,32 @@
+body {
+    margin : 0;
+    background-color: #eee;
+
+}
+
+.grammar .k-root,
+.ast > .node {
+    border : 1px solid blue;
+    padding : 5px;
+    width : 500px;
+    display : list-item;
+    list-style-type: circle;
+
+}
+
+.grammar .label,
+.ast .label {
+    border: 1px solid green;
+    border-radius: 4px;
+    padding : 2px;
+}
+
+.grammar .children > .node,
+.ast .children > .node {
+    margin-left: 10px;
+}
+
+.grammar .node,
+.ast .node {
+    display: list-item;
+}

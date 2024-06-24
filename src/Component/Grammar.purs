@@ -72,7 +72,20 @@ component =
     let
         knot = Tree.value node
         knotClassName = case _ of
-            _ -> ""
+            G.KRoot -> "k-root"
+            G.KMain -> "k-main"
+            G.KRuleDef _ -> "k-rule-def"
+            G.KSequence -> "k-sequence"
+            G.KChoice -> "k-choice"
+            G.KRepSep -> "k-repsep"
+            G.KRef _ _ -> "k-ref"
+            G.KText _ -> "k-text"
+            G.KChar G.Any -> "k-char-any"
+            G.KChar (G.Range _ _) -> "k-char-rng"
+            G.KChar (G.Not _) -> "k-char-not"
+            G.KChar (G.Single _) -> "k-char-single"
+            G.KPlaceholder -> "k-placeholeder"
+            G.KNone -> "k-none"
         knotLabel = show
     in
         HH.div
@@ -82,7 +95,7 @@ component =
                 [ HP.class_ $ ClassName "label" ]
                 [ HH.text $ knotLabel knot ]
             , HH.div
-                [ HP.class_ $ ClassName "chidren" ]
+                [ HP.class_ $ ClassName "children" ]
                 $ renderNode <$> Tree.children node
             ]
 

@@ -58,12 +58,12 @@ _grammar = Proxy :: _ "grammar"
 
 initialState :: State
 initialState =
-  { input : ""
-  , grammarInput : ""
+  { input : "aaa"
+  , grammarInput : "main :- 'a'."
   , grammar : Nothing
   , ast : Nothing
-  , inputChanged : false
-  , grammarInputChanged : false
+  , inputChanged : true
+  , grammarInputChanged : true
   }
 
 
@@ -104,10 +104,10 @@ component =
       -- , HH.button [ HE.onClick \_ -> Increment ] [ HH.text "+" ]
       [ HH.text "Input"
       , HH.text $ if state.inputChanged then "*" else "v"
-      , HH.textarea [ HP.cols 80, HP.rows 60, HE.onValueInput UpdateInput ]
+      , HH.textarea [ HP.cols 80, HP.rows 60, HE.onValueInput UpdateInput, HP.value state.input ]
       , HH.text "Grammar"
       , HH.text $ if state.grammarInputChanged then "*" else "v"
-      , HH.textarea [ HP.cols 80, HP.rows 60, HE.onValueInput UpdateGrammarInput ]
+      , HH.textarea [ HP.cols 80, HP.rows 60, HE.onValueInput UpdateGrammarInput, HP.value state.grammarInput ]
       -- , HH.text state.grammarInput
       -- , HH.text $ show state.grammar
       , case state.grammar of
@@ -121,6 +121,7 @@ component =
 
   handleAction = case _ of
     Initialize -> do
+      handleAction Tick
       _ <- H.subscribe =<< timer Tick
       pure unit
     Skip -> pure unit

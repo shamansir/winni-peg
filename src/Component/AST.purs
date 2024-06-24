@@ -10,9 +10,13 @@ import Halogen.HTML.Properties as HP
 import Halogen.HTML.Events as HE
 import Halogen.Subscription as HS
 
+import Web.HTML.Common (ClassName(..))
 
-import Grammar.AST (AST)
-import Grammar.AST (empty) as AST
+import Yoga.Tree (Tree, showTree)
+import Yoga.Tree.Extended as Tree
+
+import Grammar.AST (AST, ASTNode)
+import Grammar.AST (empty, root) as AST
 
 
 data NodeState
@@ -21,20 +25,23 @@ data NodeState
     | Collapsed
 
 
+type Input = AST String
+
+
 type State = AST String
 
 
-initialState :: State
-initialState = AST.empty
+initialState :: Input -> State
+initialState = identity
 
 
 type Action = Unit
 
 
-component :: forall query input output m. MonadAff m => H.Component query input output m
+component :: forall query input output m. MonadAff m => H.Component query Input output m
 component =
   H.mkComponent
-    { initialState : const initialState
+    { initialState
     , render
     , eval: H.mkEval $ H.defaultEval
       { handleAction = handleAction
@@ -44,9 +51,31 @@ component =
 
   render :: forall action slots. State -> H.ComponentHTML action slots m
   render ast =
-    HH.div_
-      [ HH.text "YAY"
-      ]
+    HH.div
+        [ HP.class_ $ ClassName "ast" ]
+        [ HH.text $ show ast
+        -- , HH.text $ showTree $ AST.root ast
+        , renderNode $ AST.root ast
+        ]
+
+  renderNode :: forall action slots. ASTNode String -> H.ComponentHTML action slots m
+  renderNode node =
+    let
+        knot = Tree.value node
+        knotClassName = _.rule >>> case _ of
+            _ -> "k-x"
+        knotLabel = _.rule >>> show
+    in
+        HH.div
+            [ HP.classes [ ClassName "node", ClassName $ knotClassName knot ]
+            ]
+            [ HH.div
+                [ HP.class_ $ ClassName "label" ]
+                [ HH.text $ knotLabel knot ]
+            , HH.div
+                [ HP.class_ $ ClassName "children" ]
+                $ renderNode <$> Tree.children node
+            ]
 
   handleAction = case _ of
     _ -> pure unit
