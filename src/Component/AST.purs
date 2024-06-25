@@ -2,6 +2,8 @@ module Component.AST where
 
 import Prelude
 
+import Data.Maybe (Maybe(..))
+
 import Effect.Aff.Class (class MonadAff)
 
 import Halogen as H
@@ -35,7 +37,8 @@ initialState :: Input -> State
 initialState = identity
 
 
-type Action = Unit
+data Action =
+  Receive Input
 
 
 component :: forall query input output m. MonadAff m => H.Component query Input output m
@@ -45,6 +48,7 @@ component =
     , render
     , eval: H.mkEval $ H.defaultEval
       { handleAction = handleAction
+      , receive = Just <<< Receive
       }
     }
   where
@@ -78,4 +82,5 @@ component =
             ]
 
   handleAction = case _ of
+    Receive ast -> H.put ast
     _ -> pure unit

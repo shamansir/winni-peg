@@ -4,12 +4,16 @@ import Prelude
 
 import Type.Proxy (Proxy(..))
 
+import Debug as Debug
+
 import Data.Time.Duration (Milliseconds(..))
 import Data.Maybe (Maybe(..))
 import Data.Either (Either(..), either)
 
+import Effect.Class (liftEffect)
 import Effect.Aff (forkAff, delay) as Aff
 import Effect.Aff.Class (class MonadAff)
+import Effect.Console as Console
 
 import Control.Monad.Rec.Class (forever)
 
@@ -41,8 +45,9 @@ type State =
   , grammarInput :: String
   , grammar :: Maybe (Either P.ParseError Grammar)
   , ast :: Maybe (AST String)
-  , inputChanged :: Boolean
-  , grammarInputChanged :: Boolean
+  , prevInput :: String
+  , prevGrammarInput :: String
+  , count :: Int
   }
 
 
@@ -59,11 +64,12 @@ _grammar = Proxy :: _ "grammar"
 initialState :: State
 initialState =
   { input : "aaa"
-  , grammarInput : "main :- 'a'."
+  , grammarInput : "main :- repSep('a',\"\")."
   , grammar : Nothing
   , ast : Nothing
-  , inputChanged : true
-  , grammarInputChanged : true
+  , prevInput : ""
+  , prevGrammarInput : ""
+  , count : 0
   }
 
 
@@ -79,8 +85,10 @@ data Action
   | UpdateInput InputText
   | UpdateGrammarInput GrammarInputText
   | UpdateGrammar Grammar
-  | GrammarErrorOccured P.ParseError
   | UpdateAST (AST String)
+  | GrammarErrorOccured P.ParseError
+  | CompileGrammar GrammarInputText
+  | ParseInput InputText
   | Tick
 
 
@@ -103,20 +111,21 @@ component =
       -- , HH.div_ [ HH.text $ show state ]
       -- , HH.button [ HE.onClick \_ -> Increment ] [ HH.text "+" ]
       [ HH.text "Input"
-      , HH.text $ if state.inputChanged then "*" else "v"
+      , HH.text $ if state.prevInput /= state.input then "*" else "v"
       , HH.textarea [ HP.cols 80, HP.rows 60, HE.onValueInput UpdateInput, HP.value state.input ]
       , HH.text "Grammar"
-      , HH.text $ if state.grammarInputChanged then "*" else "v"
+      , HH.text $ if state.prevGrammarInput /= state.grammarInput  then "*" else "v"
+      , HH.text $ show state.count
       , HH.textarea [ HP.cols 80, HP.rows 60, HE.onValueInput UpdateGrammarInput, HP.value state.grammarInput ]
       -- , HH.text state.grammarInput
       -- , HH.text $ show state.grammar
       , case state.grammar of
-        Nothing -> HH.text "No grammar"
-        Just (Right grammar) -> HH.slot_ _grammar 0 GrammarCmp.component grammar
-        Just (Left parseError) -> HH.text $ show parseError -- String.joinWith "\n" $ P.parseErrorHuman state.input parseError 4
+          Nothing -> HH.text "No grammar"
+          Just (Right grammar) -> HH.slot_ _grammar 0 GrammarCmp.component grammar
+          Just (Left parseError) -> HH.text $ show parseError -- String.joinWith "\n" $ P.parseErrorHuman state.input parseError 4
       , case state.ast of
-        Nothing -> HH.text "No AST"
-        Just ast -> HH.slot_ _ast 0 ASTCmp.component ast
+          Nothing -> HH.text "No AST"
+          Just ast -> HH.slot_ _ast 0 ASTCmp.component ast
       ]
 
   handleAction = case _ of
@@ -125,27 +134,40 @@ component =
       _ <- H.subscribe =<< timer Tick
       pure unit
     Skip -> pure unit
-    UpdateInput to -> H.modify_ \s -> s { input = to, inputChanged = true }
-    UpdateGrammarInput to -> H.modify_ $ \s -> s { grammarInput = to, grammarInputChanged = true }
-    UpdateAST ast -> H.modify_ \s -> s { ast = Just ast, inputChanged = false }
-    UpdateGrammar grammar -> H.modify_ \s -> s { grammar = Just $ Right grammar, grammarInputChanged = false }
+    UpdateInput to ->            H.modify_ \s -> s { input = to }
+    UpdateGrammarInput to ->     H.modify_ \s -> s { grammarInput = to }
+    UpdateAST ast ->             H.modify_ \s -> s { ast = Just ast }
+    UpdateGrammar grammar ->     H.modify_ \s -> s { grammar = Just $ Right grammar }
     GrammarErrorOccured error -> H.modify_ \s -> s { grammar = Just $ Left error }
+    CompileGrammar grammarInput -> do
+      state <- H.get
+      let grammarResult = P.runParser grammarInput Grammar.parser
+      liftEffect $ Console.log "update grammar"
+      handleAction $ either GrammarErrorOccured UpdateGrammar grammarResult
+      handleAction $ ParseInput state.input
+    ParseInput input -> do
+      state <- H.get
+      case state.grammar of
+        Just (Right grammar) -> do
+          liftEffect $ Console.log "update ast"
+          let ast = AST.parse grammar (const "") input
+          handleAction $ UpdateAST ast
+        _ ->
+          pure unit
     Tick -> do
       state <- H.get
-      if state.grammarInputChanged
-        then
-          let grammarResult = P.runParser state.grammarInput Grammar.parser
-          in handleAction $ either GrammarErrorOccured UpdateGrammar grammarResult
-        else pure unit
-      if state.inputChanged
-        then do
-          state' <- H.get -- get new state in case if grammar was changed before (split in two actions?)
-          case state'.grammar of
-            Just (Right grammar) -> do
-              let ast = AST.parse grammar (const "") state'.input
-              H.modify_ \s -> s { ast = Just ast, inputChanged = false }
-            _ -> pure unit
-        else pure unit
+      liftEffect $ Console.log "tick"
+      if state.grammarInput /= state.prevGrammarInput
+      then do
+          handleAction $ CompileGrammar state.grammarInput
+          H.modify_ \s -> s { prevGrammarInput = state.grammarInput }
+      else
+        if state.input /= state.prevInput
+            then do
+              handleAction $ ParseInput state.input
+              H.modify_ \s -> s { prevInput = state.input }
+        else
+          pure unit
 
 
 timer :: forall m a. MonadAff m => a -> m (HS.Emitter a)

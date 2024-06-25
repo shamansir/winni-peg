@@ -43,7 +43,8 @@ initialState :: Input -> State
 initialState = identity
 
 
-type Action = Unit
+data Action =
+    Receive Input
 
 
 component :: forall query output m. MonadAff m => H.Component query Input output m
@@ -53,6 +54,7 @@ component =
     , render
     , eval: H.mkEval $ H.defaultEval
       { handleAction = handleAction
+      , receive = Just <<< Receive
       }
     }
   where
@@ -101,4 +103,5 @@ component =
 
 
   handleAction = case _ of
+    Receive grammar -> H.put grammar
     _ -> pure unit
