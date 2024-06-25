@@ -1,16 +1,83 @@
 body {
     margin : 0;
     background-color: #eee;
+    font-family: 'JetBrains Mono', Monaco, 'Fira Code', monospace;
+    font-size: 10px;
 
+}
+
+.app {
+    display: flex;
+    flex-direction: row;
+}
+
+.app .text-input,
+.app .grammar-input {
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    max-width: 50%;
+}
+
+.text-input > .input-banner,
+.grammar-input > .input-banner {
+    position: relative;
+    font-size: 12px;
+    background-color: #339;
+    color: #fff;
+    margin: 5px 5px 0 5px;
+    padding: 2px 8px;
+    border-radius: 5px 5px 0 0;
+}
+
+.input-banner .input-status {
+    position: absolute;
+    right: 7px;
+}
+
+.text-input textarea,
+.grammar-input textarea {
+    border: 2px solid black;
+    margin: 1px 5px 5px 5px;
+    outline: none;
+    background-color: #eee;
+}
+
+.text-input textarea:focus,
+.grammar-input textarea:focus {
+    background-color: #fff;
+}
+
+.text-input .ast-empty,
+.grammar-input .grammar-empty {
+    border-color : #006;
+}
+
+.grammar-input .grammar-error {
+    border-color : #600;
+}
+
+.text-input .ast-ok,
+.grammar-input .grammar-ok {
+    border-color : #060;
+}
+
+.grammar,
+.ast {
+    position: relative;
 }
 
 .grammar .k-root,
 .ast > .node {
     border : 1px solid blue;
     padding : 5px;
-    width : 500px;
+    margin: 5px;
+    min-width: 100px;
+    max-width : 100%;
     display : list-item;
     list-style-type: circle;
+    max-height: 400px;
+    overflow: scroll;
 
 }
 
@@ -29,4 +96,19 @@ body {
 .grammar .node,
 .ast .node {
     display: list-item;
+}
+
+.textual {
+    position: absolute;
+    bottom: 0;
+    right: 5px;
+    padding: 5px;
+    color: #fff;
+    line-height: 1.5em;
+    background-color: #006;
+    border-radius: 5px;
+    width: 300px;
+    height: 100px;
+    overflow: scroll;
+    opacity: 0.9;
 }

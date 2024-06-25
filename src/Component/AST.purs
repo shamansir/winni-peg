@@ -57,8 +57,7 @@ component =
   render ast =
     HH.div
         [ HP.class_ $ ClassName "ast" ]
-        [ HH.text $ show ast
-        -- , HH.text $ showTree $ AST.root ast
+        [ HH.div [ HP.class_ $ ClassName "textual" ] [ HH.text $ show ast ]
         , renderNode $ AST.root ast
         ]
 

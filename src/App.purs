@@ -9,6 +9,7 @@ import Debug as Debug
 import Data.Time.Duration (Milliseconds(..))
 import Data.Maybe (Maybe(..))
 import Data.Either (Either(..), either)
+import Data.String as String
 
 import Effect.Class (liftEffect)
 import Effect.Aff (forkAff, delay) as Aff
@@ -29,7 +30,9 @@ import Grammar.AST (AST)
 import Grammar.AST.Parser (parse) as AST
 
 import Parsing (runParser, ParseError) as P
--- import Parsing.String (parseErrorHuman) as P
+import Parsing.String (parseErrorHuman) as P
+
+import Web.HTML.Common (ClassName(..))
 
 
 import Component.Grammar (component) as GrammarCmp
@@ -47,7 +50,6 @@ type State =
   , ast :: Maybe (AST String)
   , prevInput :: String
   , prevGrammarInput :: String
-  , count :: Int
   }
 
 
@@ -69,7 +71,6 @@ initialState =
   , ast : Nothing
   , prevInput : ""
   , prevGrammarInput : ""
-  , count : 0
   }
 
 
@@ -77,6 +78,11 @@ type InputText = String
 
 
 type GrammarInputText = String
+
+
+data Order
+  = InputThenGrammar
+  | GrammarThenInput
 
 
 data Action
@@ -106,26 +112,40 @@ component =
 
   render :: State -> H.ComponentHTML Action Slots m
   render state =
-    HH.div_
-      -- [ HH.button [ HE.onClick \_ -> Decrement ] [ HH.text "-" ]
-      -- , HH.div_ [ HH.text $ show state ]
-      -- , HH.button [ HE.onClick \_ -> Increment ] [ HH.text "+" ]
-      [ HH.text "Input"
-      , HH.text $ if state.prevInput /= state.input then "*" else "v"
-      , HH.textarea [ HP.cols 80, HP.rows 60, HE.onValueInput UpdateInput, HP.value state.input ]
-      , HH.text "Grammar"
-      , HH.text $ if state.prevGrammarInput /= state.grammarInput  then "*" else "v"
-      , HH.text $ show state.count
-      , HH.textarea [ HP.cols 80, HP.rows 60, HE.onValueInput UpdateGrammarInput, HP.value state.grammarInput ]
-      -- , HH.text state.grammarInput
-      -- , HH.text $ show state.grammar
-      , case state.grammar of
-          Nothing -> HH.text "No grammar"
-          Just (Right grammar) -> HH.slot_ _grammar 0 GrammarCmp.component grammar
-          Just (Left parseError) -> HH.text $ show parseError -- String.joinWith "\n" $ P.parseErrorHuman state.input parseError 4
-      , case state.ast of
-          Nothing -> HH.text "No AST"
-          Just ast -> HH.slot_ _ast 0 ASTCmp.component ast
+    HH.div
+      [ HP.class_ $ ClassName "app" ]
+      [ HH.div [ HP.class_ $ ClassName "text-input" ]
+        [ HH.span [ HP.class_ $ ClassName "input-banner" ]
+          [ HH.span [ HP.class_ $ ClassName "input-title" ] [ HH.text "Input" ]
+          , HH.span [ HP.class_ $ ClassName "input-status" ] [ HH.text $ if state.prevInput /= state.input then "*" else "v" ]
+          ]
+        , HH.textarea
+          [ HP.cols 80, HP.rows 60, HE.onValueInput UpdateInput, HP.value state.input
+          , HP.class_ $ ClassName $ case state.ast of
+              Nothing -> "ast-empty"
+              Just _ -> "ast-ok"
+          ]
+        , case state.ast of
+            Nothing -> HH.text "No AST"
+            Just ast -> HH.slot_ _ast 0 ASTCmp.component ast
+        ]
+      , HH.div [ HP.class_ $ ClassName "grammar-input" ]
+        [ HH.span [ HP.class_ $ ClassName "input-banner" ]
+          [ HH.span [ HP.class_ $ ClassName "input-title" ] [ HH.text "Grammar" ]
+          , HH.span [ HP.class_ $ ClassName "input-status" ] [ HH.text $ if state.prevGrammarInput /= state.grammarInput then "*" else "v" ]
+          ]
+        , HH.textarea
+          [ HP.cols 80, HP.rows 60, HE.onValueInput UpdateGrammarInput, HP.value state.grammarInput
+          , HP.class_ $ ClassName $ case state.grammar of
+            Nothing -> "grammar-empty"
+            Just (Right _) -> "grammar-ok"
+            Just (Left _) -> "grammar-error"
+          ]
+        , case state.grammar of
+            Nothing -> HH.text "No grammar"
+            Just (Right grammar) -> HH.slot_ _grammar 0 GrammarCmp.component grammar
+            Just (Left parseError) -> HH.text $ String.joinWith "\n" $ P.parseErrorHuman state.input 4 parseError
+        ]
       ]
 
   handleAction = case _ of
