@@ -63,9 +63,9 @@ component =
   render grammar =
     HH.div
         [ HP.class_ $ ClassName "grammar" ]
-        [ HH.div [ HP.class_ $ ClassName "textual" ] [ HH.text $ showTree $ Grammar.toTree grammar ]
+        [ {- HH.div [ HP.class_ $ ClassName "textual" ] [ HH.text $ showTree $ Grammar.toTree grammar ]
         -- HH.div [ HP.class_ $ ClassName "textual" ] [ HH.text $ show grammar ]
-        , renderNode $ Grammar.toTree grammar
+        , -} renderNode $ Grammar.toTree grammar
         ]
 
 

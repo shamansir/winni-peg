@@ -81,12 +81,38 @@ body {
 
 }
 
-.grammar .label,
-.ast .label {
-    border: 1px solid green;
+.grammar .label, .grammar .value,
+.ast .label, .ast .value, .ast .attempt-pos, .ast .attempt-value {
     border-radius: 4px;
-    padding : 2px;
+    padding : 2px 4px;
+    margin: 1px 2px;
+    display: inline-block;
+    border: 1px solid transparent;
 }
+
+.grammar .node .label,
+.ast .node .label {
+    border-color: green;
+}
+
+.grammar .node .value,
+.ast .node .value {
+    border-color: darkgreen;
+}
+
+.ast .node .attempt-pos {
+    border-color: darkblue;
+}
+
+.ast .node .attempt-value {
+    border-color: brown;
+}
+
+.grammar .node.x-sequence > .value,
+.ast .node.x-sequence > .value {
+    border-color: darkblue;
+}
+
 
 .grammar .children > .node,
 .ast .children > .node {
@@ -96,6 +122,17 @@ body {
 .grammar .node,
 .ast .node {
     display: list-item;
+}
+
+.ast .node.x-match .label {
+    border-color: #0f0;
+}
+
+.ast .node.x-fail .label,
+.ast .node.x-fail .value,
+.ast .node.x-fail .attempt-pos,
+.ast .node.x-fail .attempt-value {
+    border-color: #f00;
 }
 
 .textual {

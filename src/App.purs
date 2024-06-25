@@ -27,6 +27,7 @@ import Halogen.Subscription as HS
 import Grammar (Grammar)
 import Grammar.Parser (parser) as Grammar
 import Grammar.AST (AST)
+import Grammar.AST (fillChunks) as AST
 import Grammar.AST.Parser (parse) as AST
 
 import Parsing (runParser, ParseError) as P
@@ -170,7 +171,7 @@ component =
       case state.grammar of
         Just (Right grammar) -> do
           liftEffect $ Console.log "update ast"
-          let ast = AST.parse grammar (const "") input
+          let ast = AST.fillChunks input $ AST.parse grammar (const unit) input
           handleAction $ UpdateAST ast
         _ ->
           pure unit
