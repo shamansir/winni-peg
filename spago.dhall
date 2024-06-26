@@ -13,6 +13,7 @@ to generate this file without the comments in this block.
 { name = "winni-peg"
 , dependencies =
   [ "aff"
+  , "arrays"
   , "console"
   , "datetime"
   , "debug"
@@ -26,6 +27,7 @@ to generate this file without the comments in this block.
   , "prelude"
   , "strings"
   , "tailrec"
+  , "tuples"
   , "web-html"
   , "yoga-tree"
   ]
