@@ -135,6 +135,30 @@ body {
     border-color: #f00;
 }
 
+.ast .row {
+    display: flex;
+    pointer-events: all;
+}
+
+.ast .row:hover {
+    background-color: #fee;
+}
+
+.ast .row .label {
+    flex: auto;
+}
+
+.ast .row .attempt-pos {
+    min-width: 25px;
+    text-align: right;
+}
+
+.ast .row .attempt-value {
+    min-width: 100px;
+    max-width: 100px;
+    overflow: hidden;
+}
+
 .textual {
     position: absolute;
     bottom: 0;

@@ -112,9 +112,9 @@ component =
           G.Char (G.Single char) -> Just $ G.toRepr char
           G.Placeholder -> Nothing
           G.None -> Nothing
-        atLabel = case _ of
-          AST.Main -> "x"
-          _ -> "a"
+        -- atLabel = case _ of
+        --   AST.Main -> "x"
+        --   _ -> "a"
         attemptPos = case _ of
           AST.Match range _ -> show range.start <> ":" <> show range.end
           AST.Fail pos _ -> show pos
@@ -125,24 +125,27 @@ component =
         HH.div
             [ HP.classes [ ClassName "node", ClassName $ classNameByRule knot, ClassName $ classNameByResult knot ]
             ]
-            [ HH.span
-                [ HP.class_ $ ClassName "label" ]
-                [ HH.text $ ruleLabel knot.rule ]
-            , case ruleValue knot.rule of
-              Just value ->
-                HH.span
-                  [ HP.class_ $ ClassName "value" ]
-                  [ HH.text $ if String.length value > 0 then value else "\"\"" ]
-              Nothing -> HH.text ""
-            , HH.span
-                [ HP.class_ $ ClassName "attempt-pos" ]
-                [ HH.text $ attemptPos knot.result ]
-            , HH.span
-                [ HP.class_ $ ClassName "attempt-value" ]
-                [ HH.text $ attemptValue knot.result ]
+            [ HH.div
+              [ HP.class_ $ ClassName "row" ]
+              [ HH.span
+                  [ HP.class_ $ ClassName "label" ]
+                  [ HH.text $ ruleLabel knot.rule ]
+              , case ruleValue knot.rule of
+                Just value ->
+                  HH.span
+                    [ HP.class_ $ ClassName "value" ]
+                    [ HH.text $ if String.length value > 0 then value else "\"\"" ]
+                Nothing -> HH.text ""
+              , HH.span
+                  [ HP.class_ $ ClassName "attempt-pos" ]
+                  [ HH.text $ attemptPos knot.result ]
+              , HH.span
+                  [ HP.class_ $ ClassName "attempt-value" ]
+                  [ HH.text $ attemptValue knot.result ]
+              ]
             , HH.div
-                [ HP.class_ $ ClassName "children" ]
-                $ renderNode <$> Tree.children node
+                  [ HP.class_ $ ClassName "children" ]
+                  $ renderNode <$> Tree.children node
             ]
 
   handleAction = case _ of
