@@ -159,6 +159,16 @@ body {
     overflow: hidden;
 }
 
+.app .samples-list {
+    position : fixed;
+    right : 5px;
+    bottom: 5px;
+}
+
+.app .samples-list button {
+    font-size: 12px;
+}
+
 .textual {
     position: absolute;
     bottom: 0;

@@ -1,9 +1,11 @@
-module Samples where
+module App.Samples where
 
-import Prelude
+
+type SampleName = String
+
 
 type Sample =
-    { name :: String
+    { name :: SampleName
     , grammar :: String
     , input :: String
     }
@@ -666,7 +668,7 @@ SELECT id, ??? FROM posts;"""
         }
     ,
         --- TREE SQL ---
-        { name : "sql"
+        { name : "tree-sql"
         , grammar : """main :- repSep(statement, ws).
 
 statement :- [(selectStmt | createTableStmt), ";"].

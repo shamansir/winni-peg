@@ -10,6 +10,7 @@ import Data.Time.Duration (Milliseconds(..))
 import Data.Maybe (Maybe(..))
 import Data.Either (Either(..), either)
 import Data.String as String
+import Data.Array (find) as Array
 
 import Effect.Class (liftEffect)
 import Effect.Aff (forkAff, delay) as Aff
@@ -38,6 +39,8 @@ import Web.HTML.Common (ClassName(..))
 
 import Component.Grammar (component) as GrammarCmp
 import Component.AST (component) as ASTCmp
+
+import App.Samples (Sample, SampleName, samples)
 
 
 refreshInterval :: Milliseconds
@@ -96,6 +99,10 @@ data Action
   | GrammarErrorOccured P.ParseError
   | CompileGrammar GrammarInputText
   | ParseInput InputText
+  | LoadSample SampleName
+  -- TODO: change attempts limit
+  -- TODO: change tick period
+  -- TODO: swap grammar and input
   | Tick
 
 
@@ -147,7 +154,11 @@ component =
             Just (Right grammar) -> HH.slot_ _grammar 0 GrammarCmp.component grammar
             Just (Left parseError) -> HH.text $ String.joinWith "\n" $ P.parseErrorHuman state.input 4 parseError
         ]
+      , HH.div [ HP.class_ $ ClassName "samples-list" ]
+        $ sampleButton <$> samples
       ]
+
+  sampleButton { name } = HH.button [ HE.onClick $ const $ LoadSample name ] [ HH.text name ]
 
   handleAction = case _ of
     Initialize -> do
@@ -160,6 +171,10 @@ component =
     UpdateAST ast ->             H.modify_ \s -> s { ast = Just ast }
     UpdateGrammar grammar ->     H.modify_ \s -> s { grammar = Just $ Right grammar }
     GrammarErrorOccured error -> H.modify_ \s -> s { grammar = Just $ Left error }
+    LoadSample sampleName ->
+      case Array.find (\sample -> sample.name == sampleName) samples of
+        Just { grammar, input } -> H.modify_ \s -> s { input = input, grammarInput = grammar }
+        Nothing -> pure unit
     CompileGrammar grammarInput -> do
       state <- H.get
       let grammarResult = P.runParser grammarInput Grammar.parser
@@ -189,6 +204,7 @@ component =
               H.modify_ \s -> s { prevInput = state.input }
         else
           pure unit
+
 
 
 timer :: forall m a. MonadAff m => a -> m (HS.Emitter a)

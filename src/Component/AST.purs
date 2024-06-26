@@ -167,9 +167,9 @@ component =
               , HH.span
                   [ HP.class_ $ ClassName "attempt-value" ]
                   [ HH.text $ attemptValue knot ]
-              , HH.span
-                  [ HP.class_ $ ClassName "path" ]
-                  [ HH.text $ show knot.state.path ]
+              -- , HH.span
+              --     [ HP.class_ $ ClassName "path" ]
+              --     [ HH.text $ show knot.state.path ]
               ]
             , case knot.state.expand of
               IsLeaf -> HH.text ""

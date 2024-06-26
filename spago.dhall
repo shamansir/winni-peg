@@ -30,6 +30,7 @@ to generate this file without the comments in this block.
   , "tuples"
   , "web-html"
   , "yoga-tree"
+  , "yoga-tree-utils"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]
