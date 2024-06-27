@@ -78,6 +78,14 @@ initialState =
   }
 
 
+defaultOptions :: Options
+defaultOptions =
+  { expandRefs : false
+  , showFailures : true
+  , order : GrammarThenInput
+  }
+
+
 type InputText = String
 
 
@@ -106,6 +114,14 @@ data Action
   | Tick
 
 
+type Options =
+  { {- interval :: Int
+  , -} expandRefs :: Boolean
+  , showFailures :: Boolean
+  , order :: Order
+  }
+
+
 component :: forall query input output m. MonadAff m => H.Component query input output m
 component =
   H.mkComponent
@@ -122,7 +138,14 @@ component =
   render state =
     HH.div
       [ HP.class_ $ ClassName "app" ]
-      [ HH.div [ HP.class_ $ ClassName "text-input" ]
+      [ grammarColumn state
+      , inputColumn state
+      , HH.div [ HP.class_ $ ClassName "samples-list" ]
+        $ sampleButton <$> samples
+      ]
+
+  inputColumn state =
+    HH.div [ HP.class_ $ ClassName "text-input" ]
         [ HH.span [ HP.class_ $ ClassName "input-banner" ]
           [ HH.span [ HP.class_ $ ClassName "input-title" ] [ HH.text "Input" ]
           , HH.span [ HP.class_ $ ClassName "input-status" ] [ HH.text $ if state.prevInput /= state.input then "*" else "v" ]
@@ -137,7 +160,9 @@ component =
             Nothing -> HH.text "No AST"
             Just ast -> HH.slot_ _ast 0 ASTCmp.component ast
         ]
-      , HH.div [ HP.class_ $ ClassName "grammar-input" ]
+
+  grammarColumn state =
+    HH.div [ HP.class_ $ ClassName "grammar-input" ]
         [ HH.span [ HP.class_ $ ClassName "input-banner" ]
           [ HH.span [ HP.class_ $ ClassName "input-title" ] [ HH.text "Grammar" ]
           , HH.span [ HP.class_ $ ClassName "input-status" ] [ HH.text $ if state.prevGrammarInput /= state.grammarInput then "*" else "v" ]
@@ -154,9 +179,6 @@ component =
             Just (Right grammar) -> HH.slot_ _grammar 0 GrammarCmp.component grammar
             Just (Left parseError) -> HH.text $ String.joinWith "\n" $ P.parseErrorHuman state.input 4 parseError
         ]
-      , HH.div [ HP.class_ $ ClassName "samples-list" ]
-        $ sampleButton <$> samples
-      ]
 
   sampleButton { name } = HH.button [ HE.onClick $ const $ LoadSample name ] [ HH.text name ]
 

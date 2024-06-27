@@ -421,6 +421,53 @@ null :- "null".
 """
         }
     ,
+        --- GRAMMAR 2---
+        { name : "grammar-2"
+        , grammar : """main :- repSep((ruleDefn | comment), ws).
+
+comment :- ["#", repSep(commentChar, "")].
+ruleDefn :- [ident, ws, ":-", ws, rule, "."].
+
+rule :- (seq | choice | charRule | text | pepSep | placeholder | ref).
+
+seq :- ["[", ws, repSep(rule, [ws, ",", ws]), ws, "]"].
+choice :- ["(", ws, repSep(rule, [ws, "|", ws]), ws, ")"].
+ref :- [([captureName, ":"] | ""), ruleName].
+captureName :- ident.
+ruleName :- ident.
+text :- ["\"", repSep(stringChar, ""), "\""].
+pepSep :- [pepSepKW, "(", rep:rule, commaSpace, sep:rule, ")"].
+pepSepKW :- "repSep".
+
+charRule :- (charRange | notChar | singleChar | anyChar).
+charRange :- ["[", from:alphaNum, "-", to:alphaNum, "]"].
+notChar :- ['^', charRule].
+singleChar :- ["'", (['\\', 'n'] | ['\\', '\\'] | .), "'"].
+anyChar :- ".".
+
+ident :- repSep(alpha, "").
+ws :- repSep((" "|"\n"), "").
+commaSpace :- [",", ws].
+placeholder :- "???".
+
+alphaNum :- (alpha | num).
+alpha :- ([a-z] | [A-Z]).
+num :- [0-9].
+stringChar :- (['\\', '"'] | ^'"').
+#stringChar :- (^'"' | ['\\', '"']).
+commentChar :- ^'\n'.
+"""
+        , input : """main :- value.
+value :- (object | array | int | string | null).
+int :- [[0-9], repSep([0-9], "")].
+object :- ["{", repSep(keyValue, ","), "}"].
+keyValue :- [string, ":", value].
+string :- ["\"", repSep([a-z], ""), "\""].
+array :- ["[", repSep(value, ","), "]"].
+null :- "null".
+"""
+        }
+    ,
         --- JSON ---
         { name : "json"
         , grammar : """main :- value.

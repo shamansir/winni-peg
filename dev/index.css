@@ -128,10 +128,10 @@ body {
     border-color: #0f0;
 }
 
-.ast .node.x-fail .label,
-.ast .node.x-fail .value,
-.ast .node.x-fail .attempt-pos,
-.ast .node.x-fail .attempt-value {
+.ast .node.x-fail > .row .label,
+.ast .node.x-fail > .row .value,
+.ast .node.x-fail > .row .attempt-pos,
+.ast .node.x-fail > .row .attempt-value {
     border-color: #f00;
 }
 
