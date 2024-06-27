@@ -7,6 +7,8 @@ import Data.Array (length) as Array
 import Data.String (length) as String
 import Data.Tuple.Nested ((/\), type (/\))
 
+import Effect.Console (log) as Console
+import Effect.Class (liftEffect)
 import Effect.Aff.Class (class MonadAff)
 
 import Halogen as H
@@ -19,8 +21,11 @@ import Web.HTML.Common (ClassName(..))
 
 import Yoga.Tree (Tree, showTree)
 import Yoga.Tree.Extended as Tree
+import Yoga.Tree.Extended (update) as Tree
 import Yoga.Tree.Extended.Path (Path) as Tree
 import Yoga.Tree.Extended.Path (fill, with) as Path
+
+import Debug as Debug
 
 
 import Grammar (Rule(..), WhichChar(..), toRepr) as G
@@ -54,7 +59,7 @@ type State = Tree CellWithState
 
 
 load :: Input -> State
-load = AST.root >>> Path.fill >>> map \(path /\ cell) -> { cell, state : { expand : Collapsed, path } }
+load = AST.root >>> Path.fill >>> map \(path /\ cell) -> { cell, state : { expand : Expanded, path } }
 
 
 toggleExpand :: CellWithState -> CellWithState
@@ -148,10 +153,11 @@ component =
     in
         HH.div
             [ HP.classes [ ClassName "node", ClassName $ classNameByRule knot, ClassName $ classNameByResult knot ]
-            , HE.onClick $ const $ Toggle knot.state.path
             ]
             [ HH.div
-              [ HP.class_ $ ClassName "row" ]
+              [ HP.class_ $ ClassName "row"
+              , HE.onClick $ const $ Toggle knot.state.path
+              ]
               [ HH.span
                   [ HP.class_ $ ClassName "label" ]
                   [ HH.text $ ruleLabel knot ]
@@ -182,4 +188,6 @@ component =
 
   handleAction = case _ of
     Receive ast -> H.put $ load ast
-    Toggle path -> H.modify_ $ Path.with path $ map toggleExpand
+    Toggle path -> do
+      liftEffect $ Console.log $ show path
+      H.modify_ $ Path.with path $ Tree.update toggleExpand
