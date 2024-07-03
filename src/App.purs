@@ -29,7 +29,11 @@ import Grammar (Grammar)
 import Grammar.Parser (parser) as Grammar
 import Grammar.AST (AST)
 import Grammar.AST (fillChunks) as AST
-import Grammar.AST.Parser (parse) as AST
+import Grammar.AST.Chunk (Chunk)
+import Grammar.AST.Chunk (content) as Chunk
+import Grammar.AST.Parser (parse) as WithGrammar
+import Grammar.Self.Parser (grammar) as Self
+import Grammar.Self.Extract (extract) as Self
 
 import Parsing (runParser, ParseError) as P
 import Parsing.String (parseErrorHuman) as P
@@ -51,7 +55,7 @@ type State =
   { input :: String
   , grammarInput :: String
   , grammar :: Maybe (Either P.ParseError Grammar)
-  , ast :: Maybe (AST String)
+  , ast :: Maybe (AST Chunk)
   , prevInput :: String
   , prevGrammarInput :: String
   }
@@ -83,6 +87,7 @@ defaultOptions =
   { expandRefs : false
   , showFailures : true
   , order : GrammarThenInput
+  , parser : Self
   }
 
 
@@ -97,13 +102,18 @@ data Order
   | GrammarThenInput
 
 
+data ParserToUse
+  = FromLibrary
+  | Self
+
+
 data Action
   = Initialize
   | Skip
   | UpdateInput InputText
   | UpdateGrammarInput GrammarInputText
   | UpdateGrammar Grammar
-  | UpdateAST (AST String)
+  | UpdateAST (AST Chunk)
   | GrammarErrorOccured P.ParseError
   | CompileGrammar GrammarInputText
   | ParseInput InputText
@@ -119,6 +129,7 @@ type Options =
   , -} expandRefs :: Boolean
   , showFailures :: Boolean
   , order :: Order
+  , parser :: ParserToUse
   }
 
 
@@ -199,16 +210,22 @@ component =
         Nothing -> pure unit
     CompileGrammar grammarInput -> do
       state <- H.get
-      let grammarResult = P.runParser grammarInput Grammar.parser
-      liftEffect $ Console.log "update grammar"
-      handleAction $ either GrammarErrorOccured UpdateGrammar grammarResult
-      handleAction $ ParseInput state.input
+      case defaultOptions.parser of
+        FromLibrary -> do
+          let grammarResult = P.runParser grammarInput Grammar.parser
+          liftEffect $ Console.log "update grammar"
+          handleAction $ either GrammarErrorOccured UpdateGrammar grammarResult
+          handleAction $ ParseInput state.input
+        Self -> do
+          let ast = map Chunk.content $ AST.fillChunks $ WithGrammar.parse Self.grammar grammarInput
+          handleAction $ UpdateGrammar $ Self.extract ast
+          handleAction $ ParseInput state.input
     ParseInput input -> do
       state <- H.get
       case state.grammar of
         Just (Right grammar) -> do
           liftEffect $ Console.log "update ast"
-          let ast = AST.fillChunks input $ AST.parse grammar (const unit) input
+          let ast = AST.fillChunks $ WithGrammar.parse grammar input
           handleAction $ UpdateAST ast
         _ ->
           pure unit

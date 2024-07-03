@@ -32,6 +32,8 @@ import Grammar (Rule(..), WhichChar(..), toRepr) as G
 import Grammar.AST (AST, ASTNode)
 import Grammar.AST (Attempt(..), At(..), Cell) as AST
 import Grammar.AST (empty, root, mapBy, match) as AST
+import Grammar.AST.Chunk (Chunk)
+import Grammar.AST.Chunk (content) as Chunk
 
 
 data NodeExpand
@@ -48,11 +50,11 @@ type UIState =
 
 type CellWithState =
   { state :: UIState
-  , cell :: AST.Cell String
+  , cell :: AST.Cell Chunk
   }
 
 
-type Input = AST String
+type Input = AST Chunk
 
 
 type State = Tree CellWithState
@@ -148,7 +150,7 @@ component =
           AST.Match range _ -> show range.start <> ":" <> show range.end
           AST.Fail pos _ -> show pos
         attemptValue = _.cell >>> _.result >>> case _ of
-          AST.Match _ a -> a
+          AST.Match _ a -> Chunk.content a
           AST.Fail _ error -> show error
     in
         HH.div

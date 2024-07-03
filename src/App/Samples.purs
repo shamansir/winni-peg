@@ -428,7 +428,7 @@ null :- "null".
 comment :- ["#", repSep(commentChar, "")].
 ruleDefn :- [ident, ws, ":-", ws, rule, "."].
 
-rule :- (seq | choice | charRule | text | pepSep | placeholder | ref).
+rule :- (seq | choice | charRule | text | repSep | placeholder | ref).
 
 seq :- ["[", ws, repSep(rule, [ws, ",", ws]), ws, "]"].
 choice :- ["(", ws, repSep(rule, [ws, "|", ws]), ws, ")"].
@@ -436,8 +436,8 @@ ref :- [([captureName, ":"] | ""), ruleName].
 captureName :- ident.
 ruleName :- ident.
 text :- ["\"", repSep(stringChar, ""), "\""].
-pepSep :- [pepSepKW, "(", rep:rule, commaSpace, sep:rule, ")"].
-pepSepKW :- "repSep".
+repSep :- [repSepKW, "(", rep:rule, commaSpace, sep:rule, ")"].
+repSepKW :- "repSep".
 
 charRule :- (charRange | notChar | singleChar | anyChar).
 charRange :- ["[", from:alphaNum, "-", to:alphaNum, "]"].
