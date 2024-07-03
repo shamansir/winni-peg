@@ -772,4 +772,47 @@ MANY posts {
 };
 """
         }
+      ,
+        -- ORG
+      { name : "org"
+      , grammar : """main :- [onls,kws,onls,repSep([level, heading],nls)].
+
+# Keywords
+kws :- repSep(kw,nls).
+kw :- ["#+", kwname, ws, ":", ws, kwvalue].
+kwname :- repSep(^':',"").
+kwvalue :- repSep(^'\n',"").
+
+
+# Doc
+doc :- level.
+section :- lheading.
+# doc :- [repSep(block, nls), repSep(section, nls)].
+# docinner :- [repSep(block, nls), repSep(section, nls)].
+# block :- "a".
+# section :- [lheading,repSep(docinner,nls)].
+
+
+# Headings
+lheading :- [level, heading].
+level :- repSep(marker, "").
+marker :- '*'.
+heading :- repSep(^'\n',"").
+
+
+nl :- '\n'.
+nls :- [ws,nl,onls].
+onls :- repSep([ws,nl],"").
+ws :- repSep(' ',"")."""
+      , input : """
+#+title: The glories of Org
+#+author: A. Org Author
+
+
+* First Level Heading
+** Second Level Heading
+*** Third Level Heading
+**** Fourth Level Heading
+
+""" }
     ] :: Array Sample
