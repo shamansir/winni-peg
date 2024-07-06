@@ -775,7 +775,7 @@ MANY posts {
       ,
         -- ORG
       { name : "org"
-      , grammar : """main :- [onls,kws,onls,repSep([level, heading],nls)].
+      , grammar : """main :- [onls,kws,onls,repSep(heading,nls),repSep(paragraph,nls)].
 
 # Keywords
 kws :- repSep(kw,nls).
@@ -784,28 +784,24 @@ kwname :- repSep(^':',"").
 kwvalue :- repSep(^'\n',"").
 
 
-# Doc
-doc :- level.
-section :- lheading.
-# doc :- [repSep(block, nls), repSep(section, nls)].
-# docinner :- [repSep(block, nls), repSep(section, nls)].
-# block :- "a".
-# section :- [lheading,repSep(docinner,nls)].
-
-
 # Headings
-lheading :- [level, heading].
-level :- repSep(marker, "").
-marker :- '*'.
-heading :- repSep(^'\n',"").
+heading :- [hlevel, ws, headingContent].
+hlevel :- [hmarker,repSep(hmarker, "")].
+hmarker :- '*'.
+headingContent :- repSep(^'\n',"").
+
+paragraph :- repSep((bold|italic|word)," ").
+word :- repSep(^' ',"").
+bold :- ['*',repSep(^'*',""),'*'].
+italic :- ['~',repSep(^'~',""),'~'].
 
 
 nl :- '\n'.
 nls :- [ws,nl,onls].
 onls :- repSep([ws,nl],"").
-ws :- repSep(' ',"")."""
-      , input : """
-#+title: The glories of Org
+ws :- repSep(' ',"").
+"""
+      , input : """#+title: The glories of Org
 #+author: A. Org Author
 
 
@@ -814,5 +810,7 @@ ws :- repSep(' ',"")."""
 *** Third Level Heading
 **** Fourth Level Heading
 
+
+Test *bold* and ~italic~ inside paragraph. Also, *as several words*.
 """ }
     ] :: Array Sample
